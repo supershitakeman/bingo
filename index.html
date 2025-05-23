@@ -12,14 +12,16 @@
     }
     h1 {
       margin-top: 20px;
+      font-size: 24px;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(5, 18vw);
-      grid-template-rows: repeat(5, 18vw);
+      grid-template-columns: repeat(5, 17vw);
+      grid-template-rows: repeat(5, 17vw);
       gap: 2px;
       justify-content: center;
       margin: 20px auto;
+      max-width: 90vw;
     }
     .cell {
       border: 1px solid #999;
@@ -90,33 +92,28 @@
     }
 
     function saveBingo() {
-      const cellSize = 300;
+      const size = 300; // moderate resolution
       const titleHeight = 100;
-      const scale = window.devicePixelRatio || 2;
-
       const canvas = document.createElement("canvas");
-      canvas.width = cellSize * 5 * scale;
-      canvas.height = (cellSize * 5 + titleHeight) * scale;
+      canvas.width = size * 5;
+      canvas.height = size * 5 + titleHeight;
       const ctx = canvas.getContext("2d");
-      ctx.scale(scale, scale);
 
-      // 背景
       ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width / scale, canvas.height / scale);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // タイトル
       ctx.fillStyle = "black";
-      ctx.font = "bold 36px sans-serif";
+      ctx.font = "bold 48px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("ボドゲビンゴ！", (cellSize * 5) / 2, 70);
+      ctx.fillText("ボドゲビンゴ！", canvas.width / 2, 70);
 
       const drawPromises = imgs.map((img, i) => {
         return new Promise((resolve) => {
-          const x = (i % 5) * cellSize;
-          const y = Math.floor(i / 5) * cellSize + titleHeight;
+          const x = (i % 5) * size;
+          const y = Math.floor(i / 5) * size + titleHeight;
 
           ctx.strokeStyle = "#333";
-          ctx.strokeRect(x, y, cellSize, cellSize);
+          ctx.strokeRect(x, y, size, size);
 
           if (img && img.src) {
             const tempImg = new Image();
@@ -127,7 +124,7 @@
               const s = Math.min(iw, ih);
               const sx = (iw - s) / 2;
               const sy = (ih - s) / 2;
-              ctx.drawImage(tempImg, sx, sy, s, s, x, y, cellSize, cellSize);
+              ctx.drawImage(tempImg, sx, sy, s, s, x, y, size, size);
               resolve();
             };
             tempImg.onerror = resolve;
@@ -138,10 +135,12 @@
       });
 
       Promise.all(drawPromises).then(() => {
-        const link = document.createElement("a");
-        link.download = "bingo.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
+        canvas.toBlob(blob => {
+          const link = document.createElement("a");
+          link.download = "bingo.png";
+          link.href = URL.createObjectURL(blob);
+          link.click();
+        }, 'image/png', 0.8); // compression level adjusted
       });
     }
   </script>

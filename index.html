@@ -9,28 +9,23 @@
       font-family: sans-serif;
       background: #f5f5f5;
       text-align: center;
-      margin: 0;
-      padding: 0;
     }
     h1 {
-      margin: 20px 0;
-      font-size: 24px;
+      margin-top: 20px;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(5, 18vw);
+      grid-template-rows: repeat(5, 18vw);
       gap: 2px;
       justify-content: center;
-      margin: 0 auto;
-      max-width: 95vw;
-      aspect-ratio: 1 / 1;
+      margin: 20px auto;
     }
     .cell {
       border: 1px solid #999;
       background: white;
       position: relative;
       overflow: hidden;
-      aspect-ratio: 1 / 1;
     }
     .cell img {
       width: 100%;
@@ -48,10 +43,9 @@
       height: 100%;
     }
     button {
-      margin: 20px auto;
+      margin-top: 20px;
       padding: 10px 20px;
       font-size: 16px;
-      display: block;
     }
   </style>
 </head>
@@ -96,29 +90,33 @@
     }
 
     function saveBingo() {
-      const gridWidth = document.querySelector(".grid").clientWidth;
-      const size = gridWidth / 5;
-      const titleHeight = 50;
+      const cellSize = 300;
+      const titleHeight = 100;
+      const scale = window.devicePixelRatio || 2;
+
       const canvas = document.createElement("canvas");
-      canvas.width = size * 5;
-      canvas.height = size * 5 + titleHeight;
+      canvas.width = cellSize * 5 * scale;
+      canvas.height = (cellSize * 5 + titleHeight) * scale;
       const ctx = canvas.getContext("2d");
+      ctx.scale(scale, scale);
 
+      // 背景
       ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, canvas.width / scale, canvas.height / scale);
 
+      // タイトル
       ctx.fillStyle = "black";
-      ctx.font = "bold 24px sans-serif";
+      ctx.font = "bold 36px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("ボドゲビンゴ！", canvas.width / 2, 35);
+      ctx.fillText("ボドゲビンゴ！", (cellSize * 5) / 2, 70);
 
       const drawPromises = imgs.map((img, i) => {
         return new Promise((resolve) => {
-          const x = (i % 5) * size;
-          const y = Math.floor(i / 5) * size + titleHeight;
+          const x = (i % 5) * cellSize;
+          const y = Math.floor(i / 5) * cellSize + titleHeight;
 
           ctx.strokeStyle = "#333";
-          ctx.strokeRect(x, y, size, size);
+          ctx.strokeRect(x, y, cellSize, cellSize);
 
           if (img && img.src) {
             const tempImg = new Image();
@@ -129,7 +127,7 @@
               const s = Math.min(iw, ih);
               const sx = (iw - s) / 2;
               const sy = (ih - s) / 2;
-              ctx.drawImage(tempImg, sx, sy, s, s, x, y, size, size);
+              ctx.drawImage(tempImg, sx, sy, s, s, x, y, cellSize, cellSize);
               resolve();
             };
             tempImg.onerror = resolve;
@@ -142,7 +140,7 @@
       Promise.all(drawPromises).then(() => {
         const link = document.createElement("a");
         link.download = "bingo.png";
-        link.href = canvas.toDataURL();
+        link.href = canvas.toDataURL("image/png");
         link.click();
       });
     }

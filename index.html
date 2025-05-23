@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>画像ビンゴ</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 1em;
+      background: #f0f0f0;
+      text-align: center;
+    }
+    #bingo {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      max-width: 500px;
+      margin: auto;
+    }
+    .cell {
+      width: 100%;
+      padding-top: 100%;
+      position: relative;
+      background: #ccc;
+      border: 1px solid #999;
+    }
+    .cell img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    #saveBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1.2em;
+    }
+    input[type="file"] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>画像ビンゴ</h1>
+  <div id="bingo"></div>
+  <button id="saveBtn">ビンゴ画像を保存</button>
+  <canvas id="canvas" width="1000" height="1000" style="display:none;"></canvas>
+
+  <input type="file" id="fileInput" accept="image/*">
+  
+  <script>
+    const bingo = document.getElementById('bingo');
+    const fileInput = document.getElementById('fileInput');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let currentCell = null;
+
+    // ビンゴマス作成
+    for (let i = 0; i < 25; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.index = i;
+      cell.addEventListener('click', () => {
+        currentCell = cell;
+        fileInput.click();
+      });
+      bingo.appendChild(cell);
+    }
+
+    // 画像選択時
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file || !currentCell) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+          // 表示
+          currentCell.innerHTML = '';
+          currentCell.appendChild(img);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // 保存ボタン
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const cells = document.querySelectorAll('.cell img');
+      const size = 200; // 1マス200px
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      cells.forEach((img, i) => {
+        const x = (i % 5) * size;
+        const y = Math.floor(i / 5) * size;
+        if (img) {
+          ctx.drawImage(img, x, y, size, size);
+        } else {
+          ctx.fillStyle = "#ddd";
+          ctx.fillRect(x, y, size, size);
+        }
+      });
+      const dataURL = canvas.toDataURL("image/png");
+      const link = document.createElement('a');
+      link.href = dataURL;
+      link.download = "bingo.png";
+      link.click();
+    });
+  </script>
+</body>
+</html>
